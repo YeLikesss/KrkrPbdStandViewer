@@ -1,0 +1,263 @@
+﻿<Window x:Class="PbdStandViewerGUI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:PbdStandViewerGUI"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=local:MainWindowViewModel}"
+        Icon="Asset/AmetoYuki_OC01.ico"
+        Title="KrkrPbd立绘查看器" Height="720" Width="1280">
+    <Grid Background="WhiteSmoke">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <Menu Grid.Row="0" IsEnabled="{Binding OperateEnable}">
+            <MenuItem Header="文件">
+                <MenuItem Header="打开" Command="{Binding OnOpenFile}" />
+                <MenuItem Header="导出">
+                    <MenuItem Header="预览立绘" Command="{Binding OnExportPreview}"/>
+                    <MenuItem Header="全部立绘" Command="{Binding OnExportStand}"/>
+                </MenuItem>
+            </MenuItem>
+            <MenuItem Header="设置">
+                <MenuItem Header="导出格式">
+                    <MenuItem Header="WEBP" IsCheckable="False" 
+                              Tag="{x:Static local:PbdProcFormat.WEBP}" 
+                              Command="{Binding OnProcFmtClick}" 
+                              CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}">
+                    </MenuItem>
+                    <MenuItem Header="PNG"  IsCheckable="False"
+                              Tag="{x:Static local:PbdProcFormat.PNG}" 
+                              Command="{Binding OnProcFmtClick}" 
+                              CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}">
+                    </MenuItem>
+                    <MenuItem Header="BMP"  IsCheckable="False" 
+                              Tag="{x:Static local:PbdProcFormat.BMP}" 
+                              Command="{Binding OnProcFmtClick}" 
+                              CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}">
+                    </MenuItem>
+                    <MenuItem Header="TGA"  IsCheckable="False" 
+                              Tag="{x:Static local:PbdProcFormat.TGA}" 
+                              Command="{Binding OnProcFmtClick}" 
+                              CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}">
+                    </MenuItem>
+                </MenuItem>
+                <MenuItem Header="游戏参数" Command="{Binding OnSelectTitle}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"/>
+            </MenuItem>
+        </Menu>
+
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="3*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+
+            <Grid Grid.Row="0" Grid.Column="0" Margin="4,4,4,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="5*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+
+                <!--立绘预览框-->
+                <Border Grid.Row="0" Grid.Column="0" BorderBrush="Gray" BorderThickness="1" 
+                    HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                    Padding="1">
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                              HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                              HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                        <Image Stretch="None"
+                           Width="{Binding RelativeSource={RelativeSource Self}, Path=Source.PixelWidth}"
+                           Height="{Binding RelativeSource={RelativeSource Self}, Path=Source.PixelHeight}"
+                           Source="{Binding Mode=OneWay, Path=PreviewImage}"/>
+                    </ScrollViewer>
+                </Border>
+
+                <!-- 预览框-合成栈 分割线-->
+                <GridSplitter Grid.Row="0" Grid.Column="1" Width="4" HorizontalAlignment="Center" VerticalAlignment="Stretch" ShowsPreview="True"/>
+
+                <!--立绘合成栈-->
+                <TreeView Grid.Row="0" Grid.Column="2" Grid.RowSpan="3" BorderBrush="Gray" BorderThickness="1"
+                      HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                      ItemsSource="{Binding Mode=OneWay, Path=LevelList}"
+                          IsEnabled="{Binding OperateEnable}"
+                      >
+                    <TreeView.ItemTemplate>
+                        <HierarchicalDataTemplate DataType="LayerLevelViewModel" ItemsSource="{Binding Mode=OneWay, Path=Layers}">
+                            <!--父节点 图层级-->
+                            <TextBlock Text="{Binding Mode=OneWay, Path=Level, StringFormat=图层 {0}}"/>
+                            <!--子节点 图层名-->
+                            <HierarchicalDataTemplate.ItemTemplate>
+                                <DataTemplate DataType="local:PbdViewModel">
+                                    <StackPanel Orientation="Horizontal">
+                                        <CheckBox Margin="2" VerticalAlignment="Center" IsChecked="{Binding Mode=TwoWay, Path=IsProcess}"/>
+                                        <TextBlock Margin="2" VerticalAlignment="Center" TextAlignment="Left" Text="{Binding Mode=OneWay, Path=Name}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </HierarchicalDataTemplate.ItemTemplate>
+                        </HierarchicalDataTemplate>
+                    </TreeView.ItemTemplate>
+                </TreeView>
+
+            </Grid>
+
+            <GridSplitter Grid.Row="1" Grid.Column="0" Margin="4,0,4,0" Height="4" HorizontalAlignment="Stretch" VerticalAlignment="Center" ShowsPreview="True"/>
+
+            <Grid Grid.Row="2" Grid.Column="0" Margin="4,0,4,4">
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="1*" />
+                </Grid.ColumnDefinitions>
+
+                <!--立绘信息表格-->
+                <DataGrid Grid.Row="0" Grid.Column="0" BorderBrush="Gray" BorderThickness="1"
+                      HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                      AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
+                      CanUserResizeRows="False" ClipboardCopyMode="ExcludeHeader" CanUserSortColumns="False" IsReadOnly="True"
+                      HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray"
+                      SelectionUnit="FullRow" SelectionMode="Single"
+                      d:ItemsSource="{d:DesignInstance Type=local:PbdViewModel}"
+                      ItemsSource="{Binding Mode=OneWay, Path=LayerList}"
+                      IsEnabled="{Binding OperateEnable}"
+                    >
+                    <DataGrid.Resources>
+                        <!--居中文本样式-->
+                        <Style x:Key="DG_CenterText" TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                            <Setter Property="TextAlignment" Value="Center"/>
+                        </Style>
+                    </DataGrid.Resources>
+                    <DataGrid.ColumnHeaderStyle>
+                        <!--列头居中样式-->
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                            <Setter Property="VerticalContentAlignment" Value="Center"/>
+                        </Style>
+                    </DataGrid.ColumnHeaderStyle>
+                    <DataGrid.RowStyle>
+                        <!--行高度样式-->
+                        <Style TargetType="DataGridRow">
+                            <Setter Property="Height" Value="30"/>
+                        </Style>
+                    </DataGrid.RowStyle>
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Width="30" CanUserReorder="False" CanUserResize="False">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              IsChecked="{Binding Mode=TwoWay, Path=IsPreview, UpdateSourceTrigger=PropertyChanged}"
+                                              Command="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=DataContext.OnPreviewSwitch}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="名称" Width="200" MinWidth="200" Binding="{Binding Mode=OneWay, Path=Name}">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="TextAlignment" Value="Left"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="ID" Width="60" MinWidth="60" Binding="{Binding Mode=OneWay, Path=ID}"
+                                            ElementStyle="{StaticResource DG_CenterText}"/>
+                        <DataGridTextColumn Header="类型" Width="90" MinWidth="90" Binding="{Binding Mode=OneWay, Path=Type}" 
+                                        ElementStyle="{StaticResource DG_CenterText}"/>
+                        <DataGridTextColumn Header="X偏移" Width="60" MinWidth="60" Binding="{Binding Mode=OneWay, Path=OffsetX}" 
+                                        ElementStyle="{StaticResource DG_CenterText}"/>
+                        <DataGridTextColumn Header="Y偏移" Width="60" MinWidth="60" Binding="{Binding Mode=OneWay, Path=OffsetY}" 
+                                        ElementStyle="{StaticResource DG_CenterText}"/>
+                        <DataGridTextColumn Header="宽度" Width="60" MinWidth="60" Binding="{Binding Mode=OneWay, Path=Width}" 
+                                        ElementStyle="{StaticResource DG_CenterText}"/>
+                        <DataGridTextColumn Header="高度" Width="60" MinWidth="60" Binding="{Binding Mode=OneWay, Path=Height}" 
+                                        ElementStyle="{StaticResource DG_CenterText}"/>
+                        <DataGridTextColumn Header="不透明度" Width="60" MinWidth="60" Binding="{Binding Mode=OneWay, Path=Opacity}" 
+                                        ElementStyle="{StaticResource DG_CenterText}"/>
+                        <DataGridTemplateColumn Header="图层Z轴" Width="100" MinWidth="100">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="60"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <!--当前图层级-->
+                                        <TextBlock Grid.Column="0" Style="{StaticResource DG_CenterText}" Text="{Binding Mode=OneWay, Path=Level}"/>
+
+                                        <Grid Grid.Column="1">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <!--自减-->
+                                            <Button Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="2"
+                                                Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}, Path=DataContext.OnLevelDec}"
+                                                CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=DataGrid}, Path=SelectedItem}">
+                                                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Text="-"/>
+                                            </Button>
+
+                                            <!--自增-->
+                                            <Button Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="2"
+                                                Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}, Path=DataContext.OnLevelInc}"
+                                                CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=DataGrid}, Path=SelectedItem}">
+                                                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Text="+"/>
+                                            </Button>
+                                        </Grid>
+                                    </Grid>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <!-- 信息框-日志框 分割线-->
+                <GridSplitter Grid.Row="0" Grid.Column="1" Width="4" HorizontalAlignment="Center" VerticalAlignment="Stretch" ShowsPreview="True"/>
+
+                <!--日志信息-->
+                <TextBox Grid.Row="0" Grid.Column="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
+                         BorderBrush="Gray" BorderThickness="1"
+                         IsReadOnly="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                         Text="{Binding Mode=OneWay, Path=LogText}"/>
+
+            </Grid>
+
+            <StatusBar Grid.Row="3" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Padding="2">
+                <StatusBarItem Margin="0,0,20,0">
+                    <TextBlock HorizontalAlignment="Stretch" VerticalAlignment="Stretch" TextAlignment="Left" Text="{Binding Mode=OneWay, Path=StandName}"/>
+                </StatusBarItem>
+                <Separator/>
+                <StatusBarItem Margin="20,0,20,0">
+                    <TextBlock HorizontalAlignment="Stretch" VerticalAlignment="Stretch" TextAlignment="Center" Text="{Binding Mode=OneWay, Path=StandSize}"/>
+                </StatusBarItem>
+                <Separator/>
+                <StatusBarItem Margin="10,0,10,0">
+                    <TextBlock HorizontalAlignment="Stretch" VerticalAlignment="Stretch" TextAlignment="Center" Text="{Binding Mode=OneWay, Path=StandProcFormat}"/>
+                </StatusBarItem>
+                <Separator/>
+                <StatusBarItem Margin="20,0,20,0">
+                    <TextBlock HorizontalAlignment="Stretch" VerticalAlignment="Stretch" TextAlignment="Center" Text="{Binding Mode=OneWay, Path=StandProgress}"/>
+                </StatusBarItem>
+                <Separator HorizontalAlignment="Left"/>
+            </StatusBar>
+        </Grid>
+        
+    </Grid>
+</Window>
