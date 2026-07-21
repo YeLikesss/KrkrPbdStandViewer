@@ -78,7 +78,7 @@ namespace Pbd.Layer
         /// <summary>
         /// 名称
         /// </summary>
-        public string Name => this.m_name;
+        public string Name => $"[{this.m_group_layer_id}]{this.m_name}";
         /// <summary>
         /// X偏移
         /// </summary>
